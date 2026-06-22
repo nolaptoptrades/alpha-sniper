@@ -105,11 +105,14 @@ mkdir -p "$SNIPER_DIR/state"
 mkdir -p "$SNIPER_DIR/reports"
 
 # ── Copy files ────────────────────────────────
+# Always copy support files
+cp "$EXTRACT_DIR/requirement.txt" "$INSTALL_DIR/"
+cp "$EXTRACT_DIR/config.example.json" "$INSTALL_DIR/" 2>/dev/null || true
+
+# Only copy alpha_sniper if not already installed
 if [ ! -d "$SNIPER_DIR" ] || [ -z "$(ls -A $SNIPER_DIR 2>/dev/null)" ]; then
     echo "  Installing files..."
     cp -r "$EXTRACT_DIR/alpha_sniper" "$INSTALL_DIR/"
-    cp "$EXTRACT_DIR/config.example.json" "$INSTALL_DIR/"
-    cp "$EXTRACT_DIR/requirement.txt" "$INSTALL_DIR/"
     echo "✓ Files installed"
 else
     echo "✓ Existing install found — skipping file copy"
