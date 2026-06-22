@@ -124,7 +124,11 @@ fi
 # ── Virtual environment ───────────────────────
 if [ ! -d "$VENV_DIR" ]; then
     echo "  Creating virtual environment..."
-    $PYTHON -m venv "$VENV_DIR"
+    if [ -d "/data/data/com.termux" ]; then
+        $PYTHON -m venv "$VENV_DIR" --system-site-packages
+    else
+        $PYTHON -m venv "$VENV_DIR"
+    fi
 fi
 echo "✓ Virtual environment ready"
 
