@@ -35,11 +35,13 @@ fi
 ZIP_NAME="nlt-alpha-sniper-v${VERSION}-${PLATFORM}.zip"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/download/v${VERSION}/${ZIP_NAME}"
 
+
 # ── Termux bootstrap ──────────────────────────
 if [ -d "/data/data/com.termux" ]; then
     echo "  Bootstrapping Termux dependencies..."
     pkg update -y -q 2>/dev/null || true
     pkg install -y -q python curl unzip 2>/dev/null || true
+    pkg install -y -q python-cryptography 2>/dev/null || true
     echo "✓ Termux dependencies ready"
 fi
 
@@ -129,7 +131,12 @@ echo "✓ Virtual environment ready"
 # ── Install dependencies ──────────────────────
 echo "  Installing dependencies..."
 "$VENV_DIR/bin/pip" install -q --upgrade pip
-"$VENV_DIR/bin/pip" install -q -r "$INSTALL_DIR/requirement.txt"
+if [ -d "/data/data/com.termux" ]; then
+    "$VENV_DIR/bin/pip" install -q --no-deps -r "$INSTALL_DIR/requirement.txt"
+    "$VENV_DIR/bin/pip" install -q requests python-dotenv
+else
+    "$VENV_DIR/bin/pip" install -q -r "$INSTALL_DIR/requirement.txt"
+fi
 
 # Install CodeEnigma runtime
 WHEEL=$(ls "$EXTRACT_DIR/"codeenigma_runtime-*.whl 2>/dev/null | head -1)
