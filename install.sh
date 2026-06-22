@@ -102,16 +102,15 @@ echo "✓ Extracted"
 
 # ── Create directories ────────────────────────
 mkdir -p "$INSTALL_DIR"
-mkdir -p "$SNIPER_DIR/logs"
-mkdir -p "$SNIPER_DIR/state"
-mkdir -p "$SNIPER_DIR/reports"
+mkdir -p "$INSTALL_DIR/logs"
+mkdir -p "$INSTALL_DIR/state"
+mkdir -p "$INSTALL_DIR/reports"
 
 # ── Copy files ────────────────────────────────
 # Always copy support files
 cp "$EXTRACT_DIR/requirement.txt" "$INSTALL_DIR/"
 cp "$EXTRACT_DIR/config.example.json" "$INSTALL_DIR/" 2>/dev/null || true
 
-# Only copy alpha_sniper if not already installed
 if [ ! -d "$SNIPER_DIR" ] || [ -z "$(ls -A $SNIPER_DIR 2>/dev/null)" ]; then
     echo "  Installing files..."
     cp -r "$EXTRACT_DIR/alpha_sniper" "$INSTALL_DIR/"
