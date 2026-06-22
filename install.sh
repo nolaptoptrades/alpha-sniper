@@ -35,6 +35,14 @@ fi
 ZIP_NAME="nlt-alpha-sniper-v${VERSION}-${PLATFORM}.zip"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/download/v${VERSION}/${ZIP_NAME}"
 
+# ── Termux bootstrap ──────────────────────────
+if [ -d "/data/data/com.termux" ]; then
+    echo "  Bootstrapping Termux dependencies..."
+    pkg update -y -q 2>/dev/null || true
+    pkg install -y -q python curl unzip 2>/dev/null || true
+    echo "✓ Termux dependencies ready"
+fi
+
 # ── Python check ──────────────────────────────
 PYTHON=$(command -v python3 || command -v python)
 if [ -z "$PYTHON" ]; then
