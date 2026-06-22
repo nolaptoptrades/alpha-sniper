@@ -144,15 +144,16 @@ fi
 
 # Install CodeEnigma runtime
 WHEEL=$(ls "$EXTRACT_DIR/"codeenigma_runtime-*.whl 2>/dev/null | head -1)
-if [ -f "$WHEEL" ]; then
-    if [ -d "/data/data/com.termux" ]; then
-        "$VENV_DIR/bin/pip" install -q --force-reinstall --no-build-isolation "$WHEEL"
-    else
-        "$VENV_DIR/bin/pip" install -q --force-reinstall "$WHEEL"
+if [ -d "/data/data/com.termux" ]; then
+    SYSTEM_CRYPTO=$(python3 -c "import cryptography; import os; print(os.path.dirname(cryptography.__file__))" 2>/dev/null)
+    if [ -n "$SYSTEM_CRYPTO" ]; then
+        VENV_SITE="$VENV_DIR/lib/python3.13/site-packages"
+        cp -r "$SYSTEM_CRYPTO" "$VENV_SITE/" 2>/dev/null || true
+        echo "✓ Cryptography linked from system"
     fi
-    echo "✓ Runtime installed"
+    "$VENV_DIR/bin/pip" install -q --force-reinstall --no-deps "$WHEEL"
 else
-    echo "⚠ Runtime wheel not found"
+    "$VENV_DIR/bin/pip" install -q --force-reinstall "$WHEEL"
 fi
 echo "✓ Dependencies installed"
 
