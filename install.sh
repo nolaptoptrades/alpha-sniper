@@ -141,7 +141,11 @@ fi
 # Install CodeEnigma runtime
 WHEEL=$(ls "$EXTRACT_DIR/"codeenigma_runtime-*.whl 2>/dev/null | head -1)
 if [ -f "$WHEEL" ]; then
-    "$VENV_DIR/bin/pip" install -q --force-reinstall "$WHEEL"
+    if [ -d "/data/data/com.termux" ]; then
+        "$VENV_DIR/bin/pip" install -q --force-reinstall --no-build-isolation "$WHEEL"
+    else
+        "$VENV_DIR/bin/pip" install -q --force-reinstall "$WHEEL"
+    fi
     echo "✓ Runtime installed"
 else
     echo "⚠ Runtime wheel not found"
