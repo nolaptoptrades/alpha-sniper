@@ -53,13 +53,6 @@ if command -v apt &>/dev/null && [ ! -d "/data/data/com.termux" ]; then
     sudo apt install -y -qq curl unzip 2>/dev/null || true
     echo "✓ Linux/WSL dependencies ready"
 
-# ── Linux bootstrap Fedora/RHEL ─────────────
-elif command -v dnf &>/dev/null && [ ! -d "/data/data/com.termux" ]; then
-    echo "  Bootstrapping Fedora/RHEL dependencies..."
-    sudo dnf install -y -q curl unzip 2>/dev/null || true
-    echo "✓ Fedora/RHEL dependencies ready"
-fi
-
 # ── Python check ──────────────────────────────
 PYTHON=$(command -v python3 || command -v python)
 if [ -z "$PYTHON" ]; then
@@ -122,7 +115,6 @@ mkdir -p "$INSTALL_DIR/state"
 mkdir -p "$INSTALL_DIR/reports"
 
 # ── Copy files ────────────────────────────────
-# Always copy support files
 cp "$EXTRACT_DIR/requirement.txt" "$INSTALL_DIR/"
 cp "$EXTRACT_DIR/config.example.json" "$INSTALL_DIR/" 2>/dev/null || true
 
@@ -141,14 +133,17 @@ if [ ! -d "$VENV_DIR" ]; then
     if [ -d "/data/data/com.termux" ]; then
         $PYTHON -m venv "$VENV_DIR" --system-site-packages
     else
-        $PYTHON -m ensurepip --version &>/dev/null || \
-            sudo apt install -y python3-venv python3-pip 2>/dev/null || true
+        echo "  Installing Python venv support..."
+        sudo apt install -y python3-venv python3-pip 2>/dev/null || true
+        rm -rf "$VENV_DIR"
         $PYTHON -m venv "$VENV_DIR"
         if [ ! -f "$VENV_DIR/bin/pip" ]; then
-            curl -fsSL https://bootstrap.pypa.io/get-pip.py | "$VENV_DIR/bin/python"
+            echo "  Bootstrapping pip..."
+            curl -fsSL https://bootstrap.pypa.io/get-pip.py | "$VENV_DIR/bin/python3"
         fi
     fi
 fi
+echo "✓ Virtual environment ready"
 echo "✓ Virtual environment ready"
 
 # ── Install dependencies ──────────────────────
