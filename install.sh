@@ -39,7 +39,8 @@ DOWNLOAD_URL="https://github.com/${REPO}/releases/download/v${VERSION}/${ZIP_NAM
 # ── Termux bootstrap ──────────────────────────
 if [ -d "/data/data/com.termux" ]; then
     echo "  Bootstrapping Termux dependencies..."
-    pkg update -y -q 2>/dev/null || true
+    pkg update -y 2>/dev/null || true
+    pkg upgrade -y 2>/dev/null || true
     pkg install -y -q python curl unzip 2>/dev/null || true
     pkg install -y -q python-cryptography 2>/dev/null || true
     echo "✓ Termux dependencies ready"
@@ -159,6 +160,7 @@ echo "✓ Dependencies installed"
 # ── Config ────────────────────────────────────
 if [ ! -f "$INSTALL_DIR/config.json" ]; then
     cp "$INSTALL_DIR/config.example.json" "$INSTALL_DIR/config.json"
+    sed -i "s|{base_dir}|$INSTALL_DIR|g" "$INSTALL_DIR/config.json"
     echo "✓ config.json created"
 else
     echo "✓ config.json exists — not overwritten"
