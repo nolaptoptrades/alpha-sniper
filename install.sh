@@ -64,54 +64,17 @@ fi
 PYTHON=$(command -v python3 || command -v python)
 if [ -z "$PYTHON" ]; then
     echo "✗ Python not found."
-    
-    if command -v apt &>/dev/null && [ ! -d "/data/data/com.termux" ]; then
-        echo "  Would you like to install Python 3.12? (y/n)"
-        read -r response
-        if [[ "$response" =~ ^[Yy]$ ]]; then
-            sudo apt update -qq 2>/dev/null || true
-            sudo apt install -y -qq python3.12 python3.12-venv python3-pip 2>/dev/null || true
-            
-            # Verify installation was successful
-            if command -v python3.12 &>/dev/null; then
-                PYTHON="python3.12"
-                echo "✓ Python 3.12 installed successfully"
-            else
-                echo "✗ Python 3.12 installation failed."
-                echo "  Please install it manually:"
-                echo "    sudo apt install python3.12 python3.12-venv python3-pip"
-                exit 1
-            fi
-        else
-            echo "  Please install Python 3.10+ manually."
-            exit 1
-        fi
-    else
-        echo "  WSL/Linux: sudo apt install python3"
-        echo "  Termux:    pkg install python"
-        exit 1
-    fi
+    echo "  WSL/Linux: sudo apt install python3"
+    echo "  Termux:    pkg install python"
+    exit 1
 fi
 
 PY_MAJOR=$($PYTHON -c "import sys; print(sys.version_info.major)")
 PY_MINOR=$($PYTHON -c "import sys; print(sys.version_info.minor)")
 PY_VERSION="$PY_MAJOR.$PY_MINOR"
 
-if [ "$PY_MAJOR" -ne 3 ] || [ "$PY_MINOR" -lt 10 ] || [ "$PY_MINOR" -gt 12 ]; then
-    echo "✗ Python $PY_VERSION found — Python 3.10, 3.11, or 3.12 required."
-    
-    if [ "$PY_VERSION" = "3.14" ] || [ "$PY_VERSION" = "3.13" ]; then
-        echo ""
-        echo "  Your Python $PY_VERSION is too new for this package."
-        echo "  Please install Python 3.10, 3.11, or 3.12:"
-        echo "    sudo apt install python3.12 python3.12-venv python3-pip"
-        echo ""
-        echo "  Then run this installer again."
-    else
-        echo ""
-        echo "  WSL/Linux: sudo apt install python3"
-        echo "  Termux:    pkg install python"
-    fi
+if [ "$PY_MAJOR" -lt 3 ] || { [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 10 ]; }; then
+    echo "✗ Python $PY_VERSION found — Python 3.10+ required."
     exit 1
 fi
 echo "✓ Python $PY_VERSION"
