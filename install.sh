@@ -52,6 +52,7 @@ if command -v apt &>/dev/null && [ ! -d "/data/data/com.termux" ]; then
     sudo apt update -qq 2>/dev/null || true
     sudo apt install -y -qq curl unzip 2>/dev/null || true
     echo "✓ Linux/WSL dependencies ready"
+fi
 
 # ── Python check ──────────────────────────────
 PYTHON=$(command -v python3 || command -v python)
