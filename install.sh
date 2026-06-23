@@ -46,14 +46,14 @@ if [ -d "/data/data/com.termux" ]; then
     echo "✓ Termux dependencies ready"
 fi
 
-# ── Linux / WSL bootstrap (Debian/Ubuntu) ────
+# ── Linux / WSL bootstrap Debian/Ubuntu ────
 if command -v apt &>/dev/null && [ ! -d "/data/data/com.termux" ]; then
     echo "  Bootstrapping Linux/WSL dependencies..."
     sudo apt update -qq 2>/dev/null || true
     sudo apt install -y -qq curl unzip 2>/dev/null || true
     echo "✓ Linux/WSL dependencies ready"
 
-# ── Linux bootstrap (Fedora/RHEL) ─────────────
+# ── Linux bootstrap Fedora/RHEL ─────────────
 elif command -v dnf &>/dev/null && [ ! -d "/data/data/com.termux" ]; then
     echo "  Bootstrapping Fedora/RHEL dependencies..."
     sudo dnf install -y -q curl unzip 2>/dev/null || true
@@ -141,7 +141,12 @@ if [ ! -d "$VENV_DIR" ]; then
     if [ -d "/data/data/com.termux" ]; then
         $PYTHON -m venv "$VENV_DIR" --system-site-packages
     else
+        $PYTHON -m ensurepip --version &>/dev/null || \
+            sudo apt install -y python3-venv python3-pip 2>/dev/null || true
         $PYTHON -m venv "$VENV_DIR"
+        if [ ! -f "$VENV_DIR/bin/pip" ]; then
+            curl -fsSL https://bootstrap.pypa.io/get-pip.py | "$VENV_DIR/bin/python"
+        fi
     fi
 fi
 echo "✓ Virtual environment ready"
