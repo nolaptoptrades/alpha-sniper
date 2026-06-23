@@ -136,15 +136,14 @@ if [ ! -d "$VENV_DIR" ]; then
     else
         echo "  Installing Python venv support..."
         sudo apt install -y python3-venv python3-pip 2>/dev/null || true
-        rm -rf "$VENV_DIR"
         $PYTHON -m venv "$VENV_DIR"
-        if [ ! -f "$VENV_DIR/bin/pip" ]; then
-            echo "  Bootstrapping pip..."
-            curl -fsSL https://bootstrap.pypa.io/get-pip.py | "$VENV_DIR/bin/python3"
-        fi
     fi
 fi
-echo "✓ Virtual environment ready"
+
+if [ ! -f "$VENV_DIR/bin/pip" ]; then
+    echo "  Bootstrapping pip..."
+    curl -fsSL https://bootstrap.pypa.io/get-pip.py | "$VENV_DIR/bin/python3"
+fi
 echo "✓ Virtual environment ready"
 
 # ── Install dependencies ──────────────────────
