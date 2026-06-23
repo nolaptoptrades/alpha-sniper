@@ -136,7 +136,7 @@ echo "  Installing dependencies..."
 "$VENV_DIR/bin/pip" install -q --upgrade pip
 if [ -d "/data/data/com.termux" ]; then
     "$VENV_DIR/bin/pip" install -q --no-deps -r "$INSTALL_DIR/requirement.txt"
-    "$VENV_DIR/bin/pip" install -q requests python-dotenv rich
+    "$VENV_DIR/bin/pip" install -q requests python-dotenv rich cython setuptools toml
 else
     "$VENV_DIR/bin/pip" install -q -r "$INSTALL_DIR/requirement.txt"
 fi
