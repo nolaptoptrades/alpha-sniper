@@ -97,8 +97,8 @@ PY_MAJOR=$($PYTHON -c "import sys; print(sys.version_info.major)")
 PY_MINOR=$($PYTHON -c "import sys; print(sys.version_info.minor)")
 PY_VERSION="$PY_MAJOR.$PY_MINOR"
 
-if [ "$PY_MAJOR" -lt 3 ] || { [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 10 ]; }; then
-    echo "✗ Python $PY_VERSION found — Python 3.10+ required."
+if [ "$PY_MAJOR" -ne 3 ] || [ "$PY_MINOR" -lt 10 ] || [ "$PY_MINOR" -gt 12 ]; then
+    echo "✗ Python $PY_VERSION found — Python 3.10, 3.11, or 3.12 required."
     
     if [ "$PY_VERSION" = "3.14" ] || [ "$PY_VERSION" = "3.13" ]; then
         echo ""
@@ -106,7 +106,7 @@ if [ "$PY_MAJOR" -lt 3 ] || { [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 10 ]; }
         echo "  Please install Python 3.10, 3.11, or 3.12:"
         echo "    sudo apt install python3.12 python3.12-venv python3-pip"
         echo ""
-        echo "  Then create a symlink or use 'python3.12' directly."
+        echo "  Then run this installer again."
     else
         echo ""
         echo "  WSL/Linux: sudo apt install python3"
