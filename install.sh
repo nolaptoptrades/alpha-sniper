@@ -204,7 +204,7 @@ else
 fi
 
 # ── nlt alias ────────────────────────────────
-NLT_CMD="alias nlt=\"$VENV_DIR/bin/python $SNIPER_DIR/cli.py\""
+NLT_CMD="alias nlt=\"cd $INSTALL_DIR && $VENV_DIR/bin/python $SNIPER_DIR/cli.py\""
 
 if grep -q "alias nlt=" "$BASHRC" 2>/dev/null; then
     sed -i "s|alias nlt=.*|$NLT_CMD|" "$BASHRC"
