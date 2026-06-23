@@ -46,6 +46,20 @@ if [ -d "/data/data/com.termux" ]; then
     echo "✓ Termux dependencies ready"
 fi
 
+# ── Linux / WSL bootstrap (Debian/Ubuntu) ────
+if command -v apt &>/dev/null && [ ! -d "/data/data/com.termux" ]; then
+    echo "  Bootstrapping Linux/WSL dependencies..."
+    sudo apt update -qq 2>/dev/null || true
+    sudo apt install -y -qq python3 python3-venv python3-pip curl unzip 2>/dev/null || true
+    echo "✓ Linux/WSL dependencies ready"
+
+# ── Linux bootstrap (Fedora/RHEL) ─────────────
+elif command -v dnf &>/dev/null && [ ! -d "/data/data/com.termux" ]; then
+    echo "  Bootstrapping Fedora/RHEL dependencies..."
+    sudo dnf install -y -q python3 python3-pip curl unzip 2>/dev/null || true
+    echo "✓ Fedora/RHEL dependencies ready"
+fi
+
 # ── Python check ──────────────────────────────
 PYTHON=$(command -v python3 || command -v python)
 if [ -z "$PYTHON" ]; then
