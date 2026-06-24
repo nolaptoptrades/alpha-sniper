@@ -35,7 +35,6 @@ fi
 ZIP_NAME="nlt-alpha-sniper-v${VERSION}-${PLATFORM}.zip"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/download/v${VERSION}/${ZIP_NAME}"
 
-
 # ── Termux bootstrap ──────────────────────────
 if [ -d "/data/data/com.termux" ]; then
     echo "  Bootstrapping Termux dependencies..."
@@ -46,33 +45,38 @@ if [ -d "/data/data/com.termux" ]; then
     echo "✓ Termux dependencies ready"
 fi
 
-# ── Linux / WSL bootstrap Debian/Ubuntu ────
+# ── Linux / WSL bootstrap ────────────────────
 if command -v apt &>/dev/null && [ ! -d "/data/data/com.termux" ]; then
     echo "  Bootstrapping Linux/WSL dependencies..."
     sudo apt update -qq 2>/dev/null || true
     sudo apt install -y -qq curl unzip software-properties-common 2>/dev/null || true
 
-    if ! command -v python3.12 &>/dev/null; then
+    if ! /usr/bin/python3.12 --version &>/dev/null; then
         echo "  Installing Python 3.12 via deadsnakes PPA..."
-        sudo add-apt-repository -y ppa:deadsnakes/ppa 2>/dev/null || true
-        sudo apt update -qq 2>/dev/null || true
+        sudo add-apt-repository -y ppa:deadsnakes/ppa
+        sudo apt update -qq
+        sudo apt install -y python3.12 python3.12-venv
+    else
+        echo "  Python 3.12 already installed"
+        sudo apt install -y -qq python3.12-venv 2>/dev/null || true
     fi
-    sudo apt install -y -qq python3.12 python3.12-venv python3.12-distutils 2>/dev/null || true
 
     echo "✓ Linux/WSL dependencies ready"
 fi
 
-# ── Python check ──────────────────────────────
+# ── Python selection ──────────────────────────
 if [ ! -d "/data/data/com.termux" ]; then
-    if command -v python3.12 &>/dev/null; then
-        PYTHON=python3.12
-        echo "✓ Using Python 3.12 (project-pinned)"
-    elif command -v python3.11 &>/dev/null; then
-        PYTHON=python3.11
-        echo "✓ Using Python 3.11 (project-pinned)"
+    if [ -x "/usr/bin/python3.12" ]; then
+        PYTHON=/usr/bin/python3.12
+        echo "✓ Using Python $(/usr/bin/python3.12 --version)"
+    elif [ -x "/usr/bin/python3.11" ]; then
+        PYTHON=/usr/bin/python3.11
+        echo "✓ Using Python $(/usr/bin/python3.11 --version)"
     else
-        PYTHON=$(command -v python3 || command -v python)
-        echo "  Warning: Python 3.12 not found, falling back to system Python"
+        echo "✗ Python 3.12 not found. Please install it:"
+        echo "  sudo add-apt-repository ppa:deadsnakes/ppa"
+        echo "  sudo apt install python3.12 python3.12-venv"
+        exit 1
     fi
 else
     PYTHON=$(command -v python3 || command -v python)
@@ -80,8 +84,6 @@ fi
 
 if [ -z "$PYTHON" ]; then
     echo "✗ Python not found."
-    echo "  WSL/Linux: sudo apt install python3"
-    echo "  Termux:    pkg install python"
     exit 1
 fi
 
@@ -93,7 +95,6 @@ if [ "$PY_MAJOR" -lt 3 ] || { [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 10 ]; }
     echo "✗ Python $PY_VERSION found — Python 3.10+ required."
     exit 1
 fi
-echo "✓ Python $PY_VERSION"
 
 # ── Download ──────────────────────────────────
 echo "  Downloading $ZIP_NAME..."
@@ -117,7 +118,6 @@ if command -v unzip &>/dev/null; then
     unzip -q "$TMP_ZIP" -d "$TMP_DIR/"
 else
     echo "✗ unzip required."
-    echo "  Termux: pkg install unzip"
     echo "  Linux:  sudo apt install unzip"
     rm -rf "$TMP_DIR"
     exit 1
@@ -176,6 +176,7 @@ else
     "$VENV_DIR/bin/pip" install -q -r "$INSTALL_DIR/requirement.txt"
 fi
 
+# Install CodeEnigma runtime
 WHEEL=$(ls "$EXTRACT_DIR/"codeenigma_runtime-*.whl 2>/dev/null | head -1)
 if [ -d "/data/data/com.termux" ]; then
     SYSTEM_CRYPTO=$(python3 -c "import cryptography; import os; print(os.path.dirname(cryptography.__file__))" 2>/dev/null)
