@@ -39,8 +39,9 @@ DOWNLOAD_URL="https://github.com/${REPO}/releases/download/v${VERSION}/${ZIP_NAM
 if [ -d "/data/data/com.termux" ]; then
     echo "  Bootstrapping Termux dependencies..."
     pkg update -y 2>/dev/null || true
-    pkg upgrade -y 2>/dev/null || true
-    pkg install -y -q python curl unzip 2>/dev/null || true
+    DEBIAN_FRONTEND=noninteractive pkg install -y \
+        -o Dpkg::Options::="--force-confold" \
+        python curl unzip 2>/dev/null || true
     pkg install -y -q python-cryptography 2>/dev/null || true
     echo "✓ Termux dependencies ready"
 fi
