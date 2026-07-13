@@ -6,7 +6,7 @@ INSTALL_DIR="$HOME/nolaptoptrades"
 SNIPER_DIR="$INSTALL_DIR/alpha_sniper"
 VENV_DIR="$INSTALL_DIR/venv"
 BASHRC="$HOME/.bashrc"
-REPO_URL="https://github.com/nolaptoptrades/nlt-alpha-sniper"
+REPO_URL="https://github.com/nolaptoptrades/alpha-sniper"
 
 echo ""
 echo "═══════════════════════════════════════════"
@@ -20,7 +20,7 @@ if [ -d "/data/data/com.termux" ]; then
     IS_TERMUX=true
     echo "  Platform: Android (Termux)"
 else
-    echo "  Platform: Linux / WSL"
+    echo "  Platform: Linux / VPS"
 fi
 
 # ── Python version check ──────────────────────
@@ -56,6 +56,8 @@ if [ "$IS_TERMUX" = false ]; then
         echo "  Installing python3-venv..."
         sudo apt install -y python3-venv python3-pip 2>/dev/null || true
     }
+    # Ensure ncurses is available (needed by manager TUI)
+    sudo apt install -y libncurses-dev 2>/dev/null || true
 fi
 
 # ── Git check ─────────────────────────────────
@@ -138,8 +140,7 @@ HELIUS_API_KEY=
 
 # ── Sync (optional) ───────────────────────────
 # Contribute anonymous trade data to the NLT network.
-# Required for sync and --mystats network context.
-# Get your key at nolaptoptrades.com
+# Enables data sharing. Get your key at nolaptoptrades.com
 NLT_SYNC_KEY=
 
 # ── Telegram Bridge Bot (optional) ────────────
@@ -156,27 +157,27 @@ else
     echo "✓ .env exists — not overwritten"
 fi
 
-# ── nlt alias ────────────────────────────────
-NLT_CMD="alias nlt=\"cd $INSTALL_DIR && $VENV_DIR/bin/python $SNIPER_DIR/cli.py\""
+# ── alphas alias ─────────────────────────────
+NLT_CMD="alias alphas=\"cd $INSTALL_DIR && $VENV_DIR/bin/python $SNIPER_DIR/cli.py\""
 
-if grep -q "alias nlt=" "$BASHRC" 2>/dev/null; then
-    sed -i "s|alias nlt=.*|$NLT_CMD|" "$BASHRC"
-    echo "✓ nlt alias updated"
+if grep -q "alias alphas=" "$BASHRC" 2>/dev/null; then
+    sed -i "s|alias alphas=.*|$NLT_CMD|" "$BASHRC"
+    echo "✓ alphas alias updated"
 else
     echo "" >> "$BASHRC"
     echo "# NLT Alpha Sniper" >> "$BASHRC"
     echo "$NLT_CMD" >> "$BASHRC"
-    echo "✓ nlt alias added to ~/.bashrc"
+    echo "✓ alphas alias added to ~/.bashrc"
 fi
 
 # ── Termux: also write to ~/.profile ─────────
 if [ "$IS_TERMUX" = true ]; then
     PROFILE="$HOME/.profile"
-    if ! grep -q "alias nlt=" "$PROFILE" 2>/dev/null; then
+    if ! grep -q "alias alphas=" "$PROFILE" 2>/dev/null; then
         echo "" >> "$PROFILE"
         echo "# NLT Alpha Sniper" >> "$PROFILE"
         echo "$NLT_CMD" >> "$PROFILE"
-        echo "✓ nlt alias added to ~/.profile (Termux)"
+        echo "✓ alphas alias added to ~/.profile (Termux)"
     fi
 fi
 
@@ -188,7 +189,7 @@ echo ""
 echo "  Next steps:"
 echo "  1. source ~/.bashrc"
 echo "  2. nano $INSTALL_DIR/.env    ← add your HELIUS_API_KEY"
-echo "  3. nlt                       ← launch"
+echo "  3. alphas                    ← launch"
 echo ""
 echo "  Docs:     https://nolaptoptrades.com/docs"
 echo "  Network:  https://nolaptoptrades.com/netstats"
