@@ -1,0 +1,286 @@
+{
+  "_comment": "NLT Alpha Sniper — config.json. All tuneable values live here. Never hardcode paths or thresholds in scripts.",
+  "_meta": {
+    "version": "1.0.0",
+    "changelog": {
+      "0.1.0": "paths.py + config.json foundation",
+      "0.2.0": "discovery.py, safety.py, sensor.py ported",
+      "0.3.0": "simulator.py ported",
+      "0.4.0": "brain.py ported — scoring, fast_track, brain blocks added; ML/KNN/curator/shadow blocks removed",
+      "0.5.0": "manager.py manager_config.py stats_reader.py ported",
+      "0.6.0": "dex_api.py + whale_api.py added; safety.py updated — min_buys_bands + whale ceiling moved to config; credentials block added",
+      "0.7.0": "sensor.py + simulator.py update fetch to dex_api.py",
+      "0.7.1": "fix missing shadow_ticks path in config.json",
+      "0.7.2": "sensor set minmomhard was 3.0 - 0.0, discovery 90 to 10, live test only safety: liq, mom, vol from hard to warn, brain: min score from 60 to 30",
+      "0.7.3": "evolved plan, free tier live mode unlock every sources with time limit, plan to update source add moralis, so it becomes 1. Helius, 2. moralis, 3.dexscreener. plan is recorded in  plan v.0.7.3",
+      "0.7.4": "post_mortem.py + sync.py stub + rug_tracer.py ported; post_mortem and data blocks added to config; post mortem stack operational",
+      "0.7.5": "update brain with its own hardgate param",
+      "0.8.0": "multi-launchpad discovery (helius): pumpswap, launchlab, boop, moonshot, meteora_dbc; per-program cursor; launchpad field flows through pipeline; wallet_brain AMM list expanded (launchlab, raydium CLMM, boop.fun)",
+      "0.9.0": "rebuilding component for better stability referencing code and logic from v0.8.0",
+      "0.9.1": "pivot to create better TUI and deliver v1 as terminal first SaaS",
+      "0.9.2": "add error_log path; fix shadow_state path typo (logs/state -> state)",
+      "0.9.3": "remove dead free_tier block from discovery; EULA sync to D1 (nlt_db); log cleanup across all pipeline components; log_error() helper in paths.py",
+      "0.9.4": "license system removed; open source release prep; CLI stats commands (--mystats, --insights, --export, --storage, --clear-cache, --clear-trades); config editor TUI; bridge bot signals; D1 curator + KV aggregates",
+      "1.0.0": "first public open source release — full pipeline operational, paper trading validated, sync + aggregate data layer live"
+    }
+  },
+  "base_dir": "{base_dir}",
+  "paths": {
+    "base": "{base_dir}/alpha_sniper",
+    "logs": "{base_dir}/alpha_sniper/logs",
+    "state": "{base_dir}/alpha_sniper/state",
+    "discovery": "{base_dir}/alpha_sniper/discovery",
+    "sniper_events": "{base_dir}/alpha_sniper/logs/sniper_events.jsonl",
+    "entry_queue": "{base_dir}/alpha_sniper/logs/entry_queue.jsonl",
+    "safety_log": "{base_dir}/alpha_sniper/logs/safety.jsonl",
+    "live_ticks": "{base_dir}/alpha_sniper/logs/live_ticks.jsonl",
+    "paper_trades": "{base_dir}/alpha_sniper/logs/paper_trades.jsonl",
+    "paper_ticks": "{base_dir}/alpha_sniper/logs/paper_ticks.jsonl",
+    "verdicts": "{base_dir}/alpha_sniper/logs/entry_verdicts.jsonl",
+    "master_summary": "{base_dir}/alpha_sniper/logs/master_summary.jsonl",
+    "rug_ticks": "{base_dir}/alpha_sniper/logs/rug_ticks.jsonl",
+    "brain_state": "{base_dir}/alpha_sniper/state/brain_state.json",
+    "sim_state": "{base_dir}/alpha_sniper/state/simulator_state.json",
+    "sensor_state": "{base_dir}/alpha_sniper/state/sensor_state.json",
+    "helius_cursor": "{base_dir}/alpha_sniper/state/helius_cursor.txt",
+    "config": "{base_dir}/config.json",
+    "shadow_ticks": "{base_dir}/alpha_sniper/logs/shadow_ticks.jsonl",
+    "shadow_summary": "{base_dir}/alpha_sniper/logs/shadow_summary.jsonl",
+    "shadow_log": "{base_dir}/alpha_sniper/logs/shadow.jsonl",
+    "shadow_verdicts": "{base_dir}/alpha_sniper/logs/shadow_verdicts.jsonl",
+    "wallet_ticks": "{base_dir}/alpha_sniper/logs/wallet_ticks.jsonl",
+    "shadow_state": "{base_dir}/alpha_sniper/state/shadow_state.json",
+    "error_log": "{base_dir}/alpha_sniper/logs/error.log"
+  },
+  "settings": {
+    "poll_interval_sec": 2
+  },
+  "credentials": {
+    "_location": ".env file at ~/nolaptoptrades/.env"
+  },
+  "discovery": {
+    "loop_interval_sec": 90,
+    "priority": [
+      "helius",
+      "moralis",
+      "dexscreener"
+    ],
+    "sources": {
+      "helius": {
+        "enabled": true,
+        "max_age_min": 30,
+        "tx_fetch_cap": 20,
+        "tx_fetch_sleep_sec": 0.12
+      },
+      "moralis": {
+        "enabled": false,
+        "min_liq_usd": 80000.0,
+        "max_age_min": 30
+      },
+      "dexscreener": {
+        "enabled": false,
+        "min_liq_usd": 80000.0,
+        "min_vol_5m": 5000.0,
+        "max_age_min": 30
+      }
+    }
+  },
+  "simulator": {
+    "paper_poll_sec": 2,
+    "price_miss_max": 6,
+    "max_active_positions": 4,
+    "paper_ticks_enabled": true,
+    "loop_sleep_sec": 0.5
+  },
+  "sensor": {
+    "min_mom_hard": 1.0,
+    "max_mom_hard": 20.0,
+    "state_save_every": 10
+  },
+  "safety": {
+    "bypass": false,
+    "checks": {
+      "liquidity": {
+        "enabled": true,
+        "mode": "warn",
+        "min_usd": 150000
+      },
+      "volume": {
+        "enabled": true,
+        "mode": "warn",
+        "min_bsr": 1.2,
+        "min_vol_usd": 300.0,
+        "min_trades": 20,
+        "min_buys_bands": {
+          "liq_under_20k": 12,
+          "liq_under_50k": 18,
+          "liq_under_100k": 25,
+          "liq_100k_plus": 35
+        }
+      },
+      "momentum": {
+        "enabled": true,
+        "mode": "hard",
+        "min": 3,
+        "max": 20
+      },
+      "age": {
+        "enabled": true,
+        "mode": "warn",
+        "max_min": 120
+      },
+      "honeypot": {
+        "enabled": false,
+        "mode": "warn"
+      },
+      "whale": {
+        "enabled": false,
+        "mode": "warn",
+        "max_pct": 30,
+        "absolute_ceiling_pct": 60.0
+      }
+    }
+  },
+  "tick_resolution": {
+    "current_sec": 2,
+    "target_sec": 1,
+    "enabled": false,
+    "trades_per_batch": 50
+  },
+  "trade_rules": {
+    "tp_pct": 45,
+    "sl_pct": -18,
+    "max_hold_sec": 2700,
+    "tsl_activate_roi": 10,
+    "tsl_lock_roi": 0.5
+  },
+  "shadow_trailing": {
+    "enabled": true,
+    "poll_sec": 5,
+    "max_track_sec": 1800
+  },
+  "rug_detection": {
+    "liq_floor_usd": 1000.0,
+    "liq_warn_usd": 10000.0,
+    "max_sane_roi_pct": 500.0
+  },
+  "scoring": {
+    "buy_score_min": 60,
+    "watch_score_min": 45,
+    "min_bsr": 1.25,
+    "min_mom_m5": 6.5,
+    "max_mom_m5": 10,
+    "late_entry_hard_block_pct": 25.0,
+    "late_entry_warn_pct": 15.0,
+    "max_top10_private_pct": 35.0,
+    "whale_absolute_ceiling_pct": 60.0,
+    "lp_trend_strong_up": 0.15,
+    "lp_trend_flat": 0.05,
+    "lp_trend_falling": -0.05,
+    "lp_trend_strong_down": -0.15,
+    "vol_trend_accel": 0.2,
+    "vol_trend_decel": -0.2,
+    "liq_trend_warn_drop_usd": 5000.0,
+    "liq_trend_good_rise_usd": 10000.0,
+    "flow_strong_pos": 0.5,
+    "flow_pos": 0.1,
+    "flow_neg": -0.1,
+    "flow_strong_neg": -0.3,
+    "bsr_recency_weight": 2,
+    "dump_spike_heavy_bsr": 0.85,
+    "dump_spike_mild_bsr": 1.0,
+    "vol_high_usd": 300000.0,
+    "vol_moderate_usd": 50000.0
+  },
+  "fast_track": {
+    "min_samples": 10,
+    "score_min": 80,
+    "bsr_min": 2.0,
+    "price_min_pct": 10.0,
+    "price_max_pct": 22.0,
+    "liq_ratio": 0.98
+  },
+  "post_mortem": {
+    "enabled": true,
+    "shadow_wait_sec": 1800,
+    "max_hold_sec": 2700
+  },
+  "data": {
+    "sharing_enabled": true,
+    "last_sync_ts": null
+  },
+  "brain": {
+    "sample_count": 30,
+    "sample_interval_sec": 2.0,
+    "loop_sleep_sec": 0.5,
+    "processed_ttl_sec": 3600,
+    "hard_blocks": {
+      "enabled": true,
+      "min_liq_usd": 80000.0,
+      "min_mom_pct": 2.0,
+      "max_mom_pct": 20.0,
+      "max_top10_private_pct": 35.0,
+      "whale_absolute_ceiling_pct": 60.0
+    },
+    "_future": "ML/KNN scoring, wallet brain, shadow mode — future update. Not part of current shipping pipeline."
+  },
+  "graduation_programs": {
+    "pumpswap": {
+      "enabled": true,
+      "address": "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+      "dex": "pumpswap"
+    },
+    "launchlab": {
+      "enabled": true,
+      "address": "LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj",
+      "dex": "raydium"
+    },
+    "boop": {
+      "enabled": false,
+      "address": "boop8hVGQGqehUK2iVEMEnMrL5RbjywRzHKBmBE7ry4",
+      "dex": "meteora"
+    },
+    "moonshot": {
+      "enabled": false,
+      "address": "MoonCVVNZFSYkqNXP6bxHLPL6QQJiMagDL3qcqUQTrG",
+      "dex": "dexscreener"
+    },
+    "meteora_dbc": {
+      "enabled": false,
+      "address": "dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN",
+      "dex": "meteora"
+    }
+  },
+  "insights": {
+    "enabled": true,
+    "provider": "gemini",
+    "auto": false,
+    "model": {
+      "gemini": "gemini-2.5-flash",
+      "claude": "claude-sonnet-4-6"
+    },
+    "max_tokens": 7000
+  },
+  "reports": {
+    "auto_export": false
+  },
+  "manager": {
+    "optional_auto_start": {
+      "Bridge-Bot": false,
+      "Brain Wallet": false
+    }
+  },
+  "wallet_brain": {
+    "_known_amm_programs": {
+      "pumpswap": "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+      "raydium": "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8",
+      "meteora": "Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB",
+      "launchlab": "LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj"
+    }
+  },
+  "bridge": {
+    "enabled": false,
+    "mode": "bot",
+    "maestro_username": "maestro"
+  }
+}

@@ -1,222 +1,153 @@
 #!/bin/bash
-# ─────────────────────────────────────────────
-# NLT Alpha Sniper — Quick Installer
-# Usage:
-#   curl -fsSL https://nolaptoptrades.com/install | bash
-# ─────────────────────────────────────────────
 
 set -e
 
-VERSION="1.0.0"
-REPO="nolaptoptrades/alpha-sniper"
 INSTALL_DIR="$HOME/nolaptoptrades"
 SNIPER_DIR="$INSTALL_DIR/alpha_sniper"
 VENV_DIR="$INSTALL_DIR/venv"
 BASHRC="$HOME/.bashrc"
+REPO_URL="https://github.com/nolaptoptrades/nlt-alpha-sniper"
 
 echo ""
 echo "═══════════════════════════════════════════"
-echo "  NLT Alpha Sniper v$VERSION — Installer"
+echo "  NLT Alpha Sniper — Installation"
 echo "═══════════════════════════════════════════"
 echo ""
 
-# ── Platform detection ────────────────────────
+# ── Detect platform ───────────────────────────
+IS_TERMUX=false
 if [ -d "/data/data/com.termux" ]; then
-    PLATFORM="android-arm64"
+    IS_TERMUX=true
     echo "  Platform: Android (Termux)"
-elif uname -m | grep -q "aarch64"; then
-    PLATFORM="android-arm64"
-    echo "  Platform: ARM64 Linux"
 else
-    PLATFORM="linux-x86_64"
-    echo "  Platform: Linux x86_64 / WSL"
+    echo "  Platform: Linux / WSL"
 fi
 
-ZIP_NAME="nlt-alpha-sniper-v${VERSION}-${PLATFORM}.zip"
-DOWNLOAD_URL="https://github.com/${REPO}/releases/download/v${VERSION}/${ZIP_NAME}"
-
-# ── Termux bootstrap ──────────────────────────
-if [ -d "/data/data/com.termux" ]; then
-    echo "  Bootstrapping Termux dependencies..."
-    pkg update -y 2>/dev/null || true
-
-    DEBIAN_FRONTEND=noninteractive pkg install -y \
-        -o Dpkg::Options::="--force-confold" \
-        openssl curl 2>/dev/null || true
-
-    DEBIAN_FRONTEND=noninteractive pkg install -y \
-        -o Dpkg::Options::="--force-confold" \
-        python unzip 2>/dev/null || true
-
-    pkg install -y -q python-cryptography 2>/dev/null || true
-    echo "✓ Termux dependencies ready"
-fi
-
-# ── Linux / WSL bootstrap ────────────────────
-if command -v apt &>/dev/null && [ ! -d "/data/data/com.termux" ]; then
-    echo "  Bootstrapping Linux/WSL dependencies..."
-    sudo apt update -qq 2>/dev/null || true
-    sudo apt install -y -qq curl unzip software-properties-common 2>/dev/null || true
-
-    if ! /usr/bin/python3.12 --version &>/dev/null; then
-        echo "  Installing Python 3.12 via deadsnakes PPA..."
-        sudo add-apt-repository -y ppa:deadsnakes/ppa
-        sudo apt update -qq
-        sudo apt install -y python3.12 python3.12-venv
-    else
-        echo "  Python 3.12 already installed"
-        sudo apt install -y -qq python3.12-venv 2>/dev/null || true
-    fi
-
-    echo "✓ Linux/WSL dependencies ready"
-fi
-
-# ── Python selection ──────────────────────────
-if [ ! -d "/data/data/com.termux" ]; then
-    if [ -x "/usr/bin/python3.12" ]; then
-        PYTHON=/usr/bin/python3.12
-        echo "✓ Using Python $(/usr/bin/python3.12 --version)"
-    elif [ -x "/usr/bin/python3.11" ]; then
-        PYTHON=/usr/bin/python3.11
-        echo "✓ Using Python $(/usr/bin/python3.11 --version)"
-    else
-        echo "✗ Python 3.12 not found. Please install it:"
-        echo "  sudo add-apt-repository ppa:deadsnakes/ppa"
-        echo "  sudo apt install python3.12 python3.12-venv"
-        exit 1
-    fi
-else
-    PYTHON=$(command -v python3 || command -v python)
-fi
-
+# ── Python version check ──────────────────────
+PYTHON=$(command -v python3 || command -v python)
 if [ -z "$PYTHON" ]; then
+    echo ""
     echo "✗ Python not found."
+    if [ "$IS_TERMUX" = true ]; then
+        echo "  Run: pkg install python"
+    else
+        echo "  Run: sudo apt install python3"
+    fi
     exit 1
 fi
 
+PY_VERSION=$($PYTHON -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
 PY_MAJOR=$($PYTHON -c "import sys; print(sys.version_info.major)")
 PY_MINOR=$($PYTHON -c "import sys; print(sys.version_info.minor)")
-PY_VERSION="$PY_MAJOR.$PY_MINOR"
 
 if [ "$PY_MAJOR" -lt 3 ] || { [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 10 ]; }; then
     echo "✗ Python $PY_VERSION found — Python 3.10+ required."
     exit 1
 fi
+echo "✓ Python $PY_VERSION"
 
-# ── Download ──────────────────────────────────
-echo "  Downloading $ZIP_NAME..."
-TMP_DIR=$(mktemp -d)
-TMP_ZIP="$TMP_DIR/nlt.zip"
+# ── pip + venv (non-Termux only) ──────────────
+if [ "$IS_TERMUX" = false ]; then
+    $PYTHON -m pip --version &>/dev/null || {
+        echo "  Installing pip..."
+        curl -fsSL https://bootstrap.pypa.io/get-pip.py | $PYTHON
+    }
+    $PYTHON -m venv --help &>/dev/null || {
+        echo "  Installing python3-venv..."
+        sudo apt install -y python3-venv python3-pip 2>/dev/null || true
+    }
+fi
 
-if command -v curl &>/dev/null; then
-    curl -fsSL "$DOWNLOAD_URL" -o "$TMP_ZIP"
-elif command -v wget &>/dev/null; then
-    wget -q "$DOWNLOAD_URL" -O "$TMP_ZIP"
-else
-    echo "✗ curl or wget required."
-    echo "  Termux: pkg install curl"
+# ── Git check ─────────────────────────────────
+if ! command -v git &>/dev/null; then
+    echo ""
+    echo "✗ git not found."
+    if [ "$IS_TERMUX" = true ]; then
+        echo "  Run: pkg install git"
+    else
+        echo "  Run: sudo apt install git"
+    fi
     exit 1
 fi
-echo "✓ Downloaded"
+echo "✓ git found"
 
-# ── Extract ───────────────────────────────────
-echo "  Extracting..."
-if command -v unzip &>/dev/null; then
-    unzip -q "$TMP_ZIP" -d "$TMP_DIR/"
-else
-    echo "✗ unzip required."
-    echo "  Linux:  sudo apt install unzip"
+# ── Clone or update repo ──────────────────────
+if [ -d "$INSTALL_DIR/.git" ]; then
+    echo "  Updating existing install..."
+    git -C "$INSTALL_DIR" pull --ff-only
+    echo "✓ Updated to latest"
+elif [ -d "$INSTALL_DIR" ] && [ -f "$INSTALL_DIR/config.json" ]; then
+    # Existing non-git install — copy files in without touching config/.env
+    echo "  Existing install found — pulling latest source..."
+    TMP_DIR=$(mktemp -d)
+    git clone --depth 1 "$REPO_URL" "$TMP_DIR"
+    cp -r "$TMP_DIR/alpha_sniper" "$INSTALL_DIR/"
+    cp "$TMP_DIR/requirement.txt" "$INSTALL_DIR/"
     rm -rf "$TMP_DIR"
-    exit 1
-fi
-
-EXTRACT_DIR="$TMP_DIR/nlt"
-if [ ! -d "$EXTRACT_DIR" ]; then
-    echo "✗ Unexpected zip structure — expected nlt/ folder"
-    rm -rf "$TMP_DIR"
-    exit 1
-fi
-echo "✓ Extracted"
-
-# ── Create directories ────────────────────────
-mkdir -p "$INSTALL_DIR"
-mkdir -p "$INSTALL_DIR/logs"
-mkdir -p "$INSTALL_DIR/state"
-mkdir -p "$INSTALL_DIR/reports"
-
-# ── Copy files ────────────────────────────────
-cp "$EXTRACT_DIR/requirement.txt" "$INSTALL_DIR/"
-cp "$EXTRACT_DIR/config.example.json" "$INSTALL_DIR/" 2>/dev/null || true
-
-if [ ! -d "$SNIPER_DIR" ] || [ -z "$(ls -A $SNIPER_DIR 2>/dev/null)" ]; then
-    echo "  Installing files..."
-    cp -r "$EXTRACT_DIR/alpha_sniper" "$INSTALL_DIR/"
-    echo "✓ Files installed"
+    echo "✓ Source updated (config.json and .env preserved)"
 else
-    echo "✓ Existing install found — skipping file copy"
-    echo "  To reinstall: rm -rf $SNIPER_DIR and run again"
+    echo "  Cloning NLT Alpha Sniper..."
+    git clone --depth 1 "$REPO_URL" "$INSTALL_DIR"
+    echo "✓ Cloned to $INSTALL_DIR"
 fi
+
+# ── Create runtime dirs ───────────────────────
+mkdir -p "$SNIPER_DIR/logs"
+mkdir -p "$SNIPER_DIR/state"
+mkdir -p "$SNIPER_DIR/reports"
+mkdir -p "$SNIPER_DIR/discovery"
+echo "✓ Directories ready"
 
 # ── Virtual environment ───────────────────────
 if [ ! -d "$VENV_DIR" ]; then
     echo "  Creating virtual environment..."
-    if [ -d "/data/data/com.termux" ]; then
-        $PYTHON -m venv "$VENV_DIR" --system-site-packages
-    else
-        $PYTHON -m venv "$VENV_DIR"
-    fi
-fi
-
-if [ ! -f "$VENV_DIR/bin/pip" ]; then
-    echo "  Bootstrapping pip..."
-    curl -fsSL https://bootstrap.pypa.io/get-pip.py | "$VENV_DIR/bin/python3"
+    $PYTHON -m venv "$VENV_DIR"
 fi
 echo "✓ Virtual environment ready"
 
 # ── Install dependencies ──────────────────────
 echo "  Installing dependencies..."
 "$VENV_DIR/bin/pip" install -q --upgrade pip
-if [ -d "/data/data/com.termux" ]; then
-    "$VENV_DIR/bin/pip" install -q --no-deps -r "$INSTALL_DIR/requirement.txt"
-    "$VENV_DIR/bin/pip" install -q requests python-dotenv rich cython setuptools toml
-else
-    "$VENV_DIR/bin/pip" install -q -r "$INSTALL_DIR/requirement.txt"
-fi
-
-# Install CodeEnigma runtime
-WHEEL=$(ls "$EXTRACT_DIR/"codeenigma_runtime-*.whl 2>/dev/null | head -1)
-if [ -d "/data/data/com.termux" ]; then
-    SYSTEM_CRYPTO=$(python3 -c "import cryptography; import os; print(os.path.dirname(cryptography.__file__))" 2>/dev/null)
-    if [ -n "$SYSTEM_CRYPTO" ]; then
-        VENV_SITE="$VENV_DIR/lib/python3.13/site-packages"
-        cp -r "$SYSTEM_CRYPTO" "$VENV_SITE/" 2>/dev/null || true
-        echo "✓ Cryptography linked from system"
-    fi
-    "$VENV_DIR/bin/pip" install -q --force-reinstall --no-deps "$WHEEL"
-else
-    "$VENV_DIR/bin/pip" install -q --force-reinstall "$WHEEL"
-fi
+"$VENV_DIR/bin/pip" install -q -r "$INSTALL_DIR/requirement.txt"
 echo "✓ Dependencies installed"
 
-# ── Config ────────────────────────────────────
+# ── Config setup ─────────────────────────────
 if [ ! -f "$INSTALL_DIR/config.json" ]; then
-    cp "$INSTALL_DIR/config.example.json" "$INSTALL_DIR/config.json"
-    sed -i "s|{base_dir}|$INSTALL_DIR|g" "$INSTALL_DIR/config.json"
-    echo "✓ config.json created"
+    if [ -f "$INSTALL_DIR/config.example.json" ]; then
+        cp "$INSTALL_DIR/config.example.json" "$INSTALL_DIR/config.json"
+        # Inject actual base_dir
+        sed -i "s|{base_dir}|$INSTALL_DIR|g" "$INSTALL_DIR/config.json"
+        echo "✓ config.json created"
+    else
+        echo "⚠ config.example.json not found — create config.json manually"
+    fi
 else
     echo "✓ config.json exists — not overwritten"
 fi
 
-# ── .env ─────────────────────────────────────
+# ── .env setup ───────────────────────────────
 if [ ! -f "$INSTALL_DIR/.env" ]; then
     cat > "$INSTALL_DIR/.env" << 'ENVFILE'
-# NLT Alpha Sniper — API Keys
+# NLT Alpha Sniper — Environment Variables
+# Edit this file to add your API keys.
+# Lines starting with # are ignored.
 
+# ── Required ──────────────────────────────────
+# Helius RPC + event stream. Get a free key at helius.dev
 HELIUS_API_KEY=
+
+# ── Sync (optional) ───────────────────────────
+# Contribute anonymous trade data to the NLT network.
+# Required for sync and --mystats network context.
+# Get your key at nolaptoptrades.com
+NLT_SYNC_KEY=
+
+# ── Telegram Bridge Bot (optional) ────────────
+# For live trade signal delivery to your Telegram channel.
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 
-# AI Insights (optional — pick one)
+# ── AI Insights (optional — pick one) ─────────
 # GEMINI_API_KEY=
 # ANTHROPIC_API_KEY=
 ENVFILE
@@ -235,22 +166,19 @@ else
     echo "" >> "$BASHRC"
     echo "# NLT Alpha Sniper" >> "$BASHRC"
     echo "$NLT_CMD" >> "$BASHRC"
-    echo "✓ nlt alias added"
+    echo "✓ nlt alias added to ~/.bashrc"
 fi
 
-# ── Termux profile ────────────────────────────
-if [ -d "/data/data/com.termux" ]; then
+# ── Termux: also write to ~/.profile ─────────
+if [ "$IS_TERMUX" = true ]; then
     PROFILE="$HOME/.profile"
     if ! grep -q "alias nlt=" "$PROFILE" 2>/dev/null; then
         echo "" >> "$PROFILE"
         echo "# NLT Alpha Sniper" >> "$PROFILE"
         echo "$NLT_CMD" >> "$PROFILE"
-        echo "✓ nlt alias added to ~/.profile"
+        echo "✓ nlt alias added to ~/.profile (Termux)"
     fi
 fi
-
-# ── Cleanup ───────────────────────────────────
-rm -rf "$TMP_DIR"
 
 echo ""
 echo "═══════════════════════════════════════════"
@@ -259,10 +187,10 @@ echo "════════════════════════�
 echo ""
 echo "  Next steps:"
 echo "  1. source ~/.bashrc"
-echo "  2. nano $INSTALL_DIR/.env    ← add API keys"
-echo "  3. nlt --license             ← activate key"
-echo "  4. nlt                       ← launch"
+echo "  2. nano $INSTALL_DIR/.env    ← add your HELIUS_API_KEY"
+echo "  3. nlt                       ← launch"
 echo ""
-echo "  Docs:  https://nolaptoptrades.com/docs"
-echo "  Help:  @nolaptoptrades on Telegram"
+echo "  Docs:     https://nolaptoptrades.com/docs"
+echo "  Network:  https://nolaptoptrades.com/netstats"
+echo "  Telegram: @nolaptoptrades"
 echo ""
