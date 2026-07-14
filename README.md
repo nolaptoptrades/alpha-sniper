@@ -140,7 +140,7 @@ alphas --clear-trades           Remove compiled trade records
 alphas --logs COMPONENT         Tail a component log
 alphas --reset                  Clear state files
 alphas --version                Show version
-alphas --dry-run                Launch in dry-run mode
+alphas --sync-on                Toggle sync
 ```
 
 ---
