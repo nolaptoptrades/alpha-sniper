@@ -29,7 +29,7 @@ from paths import get_path, log_error
 
 TRADE_SUMMARY_PATH = get_path("master_summary")
 
-SYNC_KEY      = os.environ.get("NLT_SYNC_KEY", "")
+SYNC_KEY      = os.environ.get("NLT_SYNC_KEY", "NLT-0qiuzKHoeFcxBZv40igfc04oAZYFqj3d")
 SYNC_ENDPOINT = os.environ.get("NLT_SYNC_ENDPOINT", "https://nlt-trades.frankykho1.workers.dev")
 
 
@@ -55,10 +55,6 @@ def _load_trade_record(trade_id: str) -> dict | None:
 
 def _post_to_worker(payload: dict) -> bool:
     """POST payload to the sync worker endpoint. Returns True on 200, False otherwise."""
-    if not SYNC_KEY:
-        log_error("sync", "NLT_SYNC_KEY not set — cannot sync")
-        return False
-
     try:
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(

@@ -5,6 +5,7 @@ Entry point dispatcher. Owns all argument parsing and pre-launch sequence.
 Pre-launch order:
     1. parse flags → dispatch special commands (exit after)
     2. EULA check  → show + accept on first run or version change
+    3. license     → one-line status print
     4. launch TUI
 
 Add new flags here — never in manager.py.
@@ -20,7 +21,7 @@ import urllib.request
 import urllib.error
 from datetime import datetime, timezone
 
-from paths import get_config, get_path, log_error
+from paths import get_config, get_path, log_error, save_config_value
 
 
 # ============================================================
@@ -155,7 +156,10 @@ def _check_eula():
         sys.exit(0)
 
     _save_eula_state(EULA_VERSION, APP_VERSION)
+    from sync_prefs import prompt_sync_preference
+    prompt_sync_preference()
     print()
+
 
 
 # ============================================================
@@ -165,6 +169,25 @@ def _check_eula():
 def _handle_version():
     from eula import APP_VERSION, EULA_VERSION
     print(f"NLT Alpha Sniper v{APP_VERSION} — Terms v{EULA_VERSION}")
+
+
+def _handle_sync_on():
+    from sync_prefs import set_sharing_enabled
+    ok = set_sharing_enabled(True)
+    if ok:
+        print("✓ Sync enabled — anonymous trade data will be contributed to the NLT network.")
+    else:
+        print("✗ Failed to update config — check config.json is writable.")
+
+
+def _handle_sync_off():
+    from sync_prefs import set_sharing_enabled
+    ok = set_sharing_enabled(False)
+    if ok:
+        print("✓ Sync disabled — no data will be sent.")
+        print("  Re-enable anytime with: alphas --sync-on")
+    else:
+        print("✗ Failed to update config — check config.json is writable.")
 
 
 
@@ -857,6 +880,16 @@ def main():
     )
 
     parser.add_argument(
+        "--sync-on",
+        action="store_true",
+        help="Enable anonymous trade data sync",
+    )
+    parser.add_argument(
+        "--sync-off",
+        action="store_true",
+        help="Disable anonymous trade data sync",
+    )
+    parser.add_argument(
         "--version",
         action="store_true",
         help="Show version and exit",
@@ -917,6 +950,14 @@ def main():
     # ── Special commands — handle and exit ────────────────────
     if args.version:
         _handle_version()
+        return
+
+    if args.sync_on:
+        _handle_sync_on()
+        return
+
+    if args.sync_off:
+        _handle_sync_off()
         return
 
     if args.logs:

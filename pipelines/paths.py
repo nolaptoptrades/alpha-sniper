@@ -98,6 +98,30 @@ def get_config() -> Dict[str, Any]:
     return cfg
 
 
+def save_config_value(section: str, key: str, value: Any) -> bool:
+    """
+    Write a single key inside a config section back to config.json.
+    Clears the get_config() LRU cache so the new value is visible immediately.
+
+    Example:
+        save_config_value("data", "sharing_enabled", True)
+    """
+    try:
+        config_path = _find_config_path()
+        with open(config_path, "r", encoding="utf-8") as f:
+            raw = json.load(f)
+        if section not in raw:
+            raw[section] = {}
+        raw[section][key] = value
+        with open(config_path, "w", encoding="utf-8") as f:
+            json.dump(raw, f, indent=2, ensure_ascii=False)
+        get_config.cache_clear()
+        return True
+    except Exception as e:
+        log_error("paths", f"save_config_value failed: {e}")
+        return False
+
+
 # ============================================================
 # DEFAULT CONFIG (factory reset)
 # ============================================================

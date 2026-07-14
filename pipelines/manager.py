@@ -1411,6 +1411,13 @@ def main(dry_run: bool = False):
             mlog(f"auto-started background: {s['name']}")
             time.sleep(0.2)
 
+    # Sync preference fallback — fires if user skipped cli.py
+    try:
+        from sync_prefs import prompt_sync_preference
+        prompt_sync_preference()
+    except Exception:
+        pass
+
     # Launch TUI — no ENTER gate
     try:
         curses.wrapper(draw)

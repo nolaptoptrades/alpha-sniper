@@ -128,17 +128,19 @@ Installed automatically during setup:
 ## CLI Reference
 
 ```
-alphas                     Launch pipeline TUI
-alphas --mystats           Local trade summary and stats
-alphas --mystats --insightsAI-powered trade insights (BYOK)
-alphas --storage           Disk usage breakdown
-alphas --clear-cache       Delete log and handshake files
-alphas --clear-trades      Remove compiled trade records
-alphas --export            Save report to txt file
-alphas --logs COMPONENT    Tail a component log
-alphas --reset             Clear state files
-alphas --version           Show version
-alphas --dry-run           Launch in dry-run mode
+alphas                          Launch pipeline TUI
+alphas --mystats                Local trade summary and stats
+alphas --mystats --insights     AI-powered trade insights (BYOK)
+alphas --sync-on                Enable anonymous trade data sync
+alphas --sync-off               Disable anonymous trade data sync
+alphas --export                 Save report to txt file
+alphas --storage                Disk usage breakdown
+alphas --clear-cache            Delete log and handshake files
+alphas --clear-trades           Remove compiled trade records
+alphas --logs COMPONENT         Tail a component log
+alphas --reset                  Clear state files
+alphas --version                Show version
+alphas --dry-run                Launch in dry-run mode
 ```
 
 ---
