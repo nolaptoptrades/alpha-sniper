@@ -82,9 +82,6 @@ Add to `~/nolaptoptrades/.env` after install:
 # Required
 HELIUS_API_KEY=        # helius.dev — free tier works
 
-# Sync — contribute anonymous trade data, access network context
-NLT_SYNC_KEY=          # nolaptoptrades.com
-
 # Optional — Telegram signal bot
 TELEGRAM_BOT_TOKEN=    # @BotFather on Telegram
 TELEGRAM_CHAT_ID=      # @userinfobot on Telegram
