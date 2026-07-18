@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>NLT Alpha Sniper</h1>
+  <h1>NLT Alphas</h1>
   <p><strong>Assess before you commit.</strong></p>
   <p>Solana memecoin market analysis and paper trading pipeline.</p>
 
@@ -11,9 +11,9 @@
 
 ---
 
-## What is NLT Alpha Sniper?
+## What is NLT Alphas?
 
-NLT Alpha Sniper is a **Solana graduation sniper pipeline** — a terminal-first
+NLT Alphas is a **Solana graduation sniper pipeline** — a terminal-first
 market analysis and paper trading tool that monitors PumpSwap graduation events,
 filters for quality setups across multiple dimensions, and simulates trades in real time.
 
@@ -59,7 +59,7 @@ curl -fsSL https://nolaptoptrades.com/install | bash
 Or clone manually:
 
 ```bash
-git clone https://github.com/nolaptoptrades/nlt-alpha-sniper ~/nolaptoptrades
+git clone https://github.com/nolaptoptrades/alphas.git ~/nolaptoptrades
 cd ~/nolaptoptrades
 bash install.sh
 ```
